@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报表中心 - 绿林工具绩效管理系统</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--brand:#0078D4;--brand-hover:#106EBE;--text-primary:#323130;--text-secondary:#605E5C;--bg-primary:#FFFFFF;--bg-secondary:#F3F2F1;--bg-tertiary:#FAFAFA;--border:#EDEBE9;--border-strong:#D2D0CE;--success:#107C10;--warning:#FF8C00;--error:#D13438;--shadow-sm:0 2px 4px rgba(0,0,0,0.08);--shadow-md:0 4px 12px rgba(0,0,0,0.1);}
+        body{font-family:"Segoe UI Variable","Segoe UI","Microsoft YaHei",sans-serif;font-size:16px;line-height:1.6;color:var(--text-primary);background:var(--bg-secondary);}
+        .page-wrapper{margin-top:60px;padding:32px;}
+        .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+        .page-title{font-size:28px;font-weight:600;}
+        .card{background:white;border-radius:8px;box-shadow:var(--shadow-sm);padding:24px;margin-bottom:16px;}
+        .card-title{font-size:18px;font-weight:600;margin-bottom:16px}
+        .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+        .stat-card{background:white;border-radius:8px;padding:20px;box-shadow:var(--shadow-sm)}
+        .stat-card .stat-label{font-size:14px;color:var(--text-secondary);margin-bottom:8px}
+        .stat-card .stat-value{font-size:28px;font-weight:700}
+        .chart-box{height:300px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);border:1px dashed var(--border);border-radius:8px;margin-bottom:16px;font-size:14px;flex-direction:column;gap:8px}
+        table{width:100%;border-collapse:collapse;font-size:14px}
+        table th{background:var(--bg-tertiary);padding:12px 16px;text-align:left;font-weight:600;border-bottom:1px solid var(--border)}
+        table td{padding:12px 16px;border-bottom:1px solid var(--border)}
+        table tr:hover td{background:#F5F9FD}
+        .rank{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+        .rank-1{background:#FFD700;color:#7A6100}
+        .rank-2{background:#C0C0C0;color:#5A5A5A}
+        .rank-3{background:#CD7F32;color:#5A3A1A}
+        .rank-other{background:var(--bg-secondary);color:var(--text-secondary)}
+        .score-bar{display:flex;align-items:center;gap:8px}
+        .score-bar .bar{flex:1;height:8px;background:var(--bg-secondary);border-radius:4px;overflow:hidden}
+        .score-bar .fill{height:100%;background:linear-gradient(90deg,var(--brand),#5B5FCF);border-radius:4px;transition:width 0.5s ease}
+        .score-bar .val{font-weight:600;min-width:40px;text-align:right}
+        .filter-row{display:flex;gap:12px;align-items:flex-end;margin-bottom:16px}
+        .filter-group{display:flex;flex-direction:column;gap:4px}
+        .filter-label{font-size:12px;font-weight:600;color:var(--text-secondary)}
+        .filter-select{padding:7px 12px;border:1px solid var(--border-strong);border-radius:4px;font-size:14px;font-family:inherit}
+        .btn{padding:7px 16px;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;font-family:inherit}
+        .btn-secondary{background:white;color:var(--text-primary);border:1px solid var(--border-strong)}
+        .toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:500;z-index:9999;box-shadow:var(--shadow-md);animation:slideIn 0.3s ease}
+        .toast-success{background:#DFF6DD;color:#0B5C0B}
+        @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+        .top-nav{height:60px;background:#fff;border-bottom:1px solid #EDEBE9;display:flex;align-items:center;padding:0 32px;position:fixed;top:0;left:0;right:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+        .logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;color:var(--brand);text-decoration:none}
+        .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,#107C10,#389146);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:18px}
+        .nav-menu{display:flex;align-items:center;gap:4px;margin-left:48px;list-style:none}
+        .nav-menu li a{padding:6px 14px;border-radius:4px;font-size:14px;color:var(--text-secondary);text-decoration:none;transition:all 0.2s;cursor:pointer;display:block}
+        .nav-menu li a:hover{background:var(--bg-secondary)}
+        .nav-right{margin-left:auto}
+        .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--brand);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;cursor:pointer}
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard.html" class="logo"><div class="logo-icon">🌲</div><span>绿林工具绩效管理系统</span></a>
+        <ul class="nav-menu" id="navMenu"></ul>
+        <div class="nav-right" id="navRight"></div>
+    </nav>
+
+    <div class="page-wrapper">
+        <div class="page-header">
+            <h1 class="page-title">报表中心</h1>
+        </div>
+
+        <div class="filter-row">
+            <div class="filter-group">
+                <label class="filter-label">考核周期</label>
+                <select class="filter-select" id="filterCycle" onchange="loadReports()"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">部门</label>
+                <select class="filter-select" id="filterDept" onchange="loadReports()">
+                    <option value="">全部部门</option>
+                </select>
+            </div>
+            <button class="btn btn-secondary" onclick="exportData()">导出Excel</button>
+        </div>
+
+        <div class="stats-grid" id="statsGrid"></div>
+
+        <div class="card">
+            <h3 class="card-title">部门考核完成率</h3>
+            <div class="chart-box" id="completionChart">
+                <div style="font-size:32px;opacity:0.3;">📊</div>
+                <div>加载中...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="card-title">员工得分排行榜</h3>
+            <div id="rankingTable"></div>
+        </div>
+    </div>
+
+    <script>
+    const API = '/api';
+
+    function getToken() { return localStorage.getItem('pbc_token') || ''; }
+    function getUser() { const u = localStorage.getItem('pbc_user'); return u ? JSON.parse(u) : null; }
+
+    async function api(url, opts = {}) {
+        const headers = { 'Content-Type': 'application/json' };
+        const token = getToken();
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        const res = await fetch(API + url, { ...opts, headers: { ...headers, ...opts.headers } });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            if (res.status === 401) location.href = '/login.html';
+            throw new Error(data.message || '失败');
+        }
+        return data;
+    }
+
+    function toast(msg, type = 'info') {
+        const t = document.createElement('div');
+        t.className = 'toast toast-' + type;
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    function logout() { localStorage.removeItem('pbc_token'); localStorage.removeItem('pbc_user'); location.href = '/login.html'; }
+
+    function initNav() {
+        const user = getUser();
+        if (!user) { location.href = '/login.html'; return; }
+        const menus = {
+            admin: [{label:'工作台',url:'/dashboard.html'},{label:'员工管理',url:'/employees.html'},{label:'业务指标',url:'/metrics.html'},{label:'数据录入',url:'/data-entry.html'},{label:'考核模板',url:'/appraisal-template.html'},{label:'考核周期',url:'/appraisal-cycle.html'},{label:'考核管理',url:'/appraisal-list.html'},{label:'报表中心',url:'/reports.html'}],
+            manager: [{label:'工作台',url:'/dashboard.html'},{label:'员工管理',url:'/employees.html'},{label:'数据录入',url:'/data-entry.html'},{label:'考核管理',url:'/appraisal-list.html'}],
+            employee: [{label:'工作台',url:'/dashboard.html'},{label:'我的考核',url:'/appraisal-list.html'}]
+        };
+        document.getElementById('navMenu').innerHTML = (menus[user.role]||[]).map(m => `<li><a href="${m.url}">${m.label}</a></li>`).join('');
+        document.getElementById('navRight').innerHTML = `<div class="user-avatar" onclick="logout()">${(user.username||'U')[0].toUpperCase()}</div>`;
+    }
+
+    async function init() {
+        await loadCycles();
+        await loadDepartments();
+        loadReports();
+    }
+
+    async function loadCycles() {
+        try {
+            const data = await api('/appraisal/cycles');
+            const cycles = data.data || [];
+            const opts = cycles.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            document.getElementById('filterCycle').innerHTML = opts || '<option value="">暂无周期</option>';
+        } catch(e) {}
+    }
+
+    async function loadDepartments() {
+        try {
+            const data = await api('/employee/departments');
+            const depts = data.data || [];
+            document.getElementById('filterDept').innerHTML = '<option value="">全部部门</option>' + 
+                depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+        } catch(e) {}
+    }
+
+    async function loadReports() {
+        const cycleId = document.getElementById('filterCycle').value;
+        const deptId = document.getElementById('filterDept').value;
+        const params = new URLSearchParams();
+        if (cycleId) params.append('cycle_id', cycleId);
+        if (deptId) params.append('department_id', deptId);
+
+        try {
+            const [statData, listData] = await Promise.all([
+                api('/metric/statistics?' + params.toString()),
+                api('/appraisal/list?' + params.toString() + '&status=completed&page_size=100'),
+            ]);
+
+            const completed = (listData.data?.items || []).filter(a => a.final_score != null);
+            const all = listData.data?.items || [];
+            const total = all.length;
+            const doneCount = completed.length;
+            const avgScore = doneCount > 0 ? (completed.reduce((s, a) => s + (a.final_score || 0), 0) / doneCount).toFixed(1) : '-';
+
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card"><div class="stat-label">考核总人数</div><div class="stat-value" style="color:var(--brand)">${total}</div></div>
+                <div class="stat-card"><div class="stat-label">已完成</div><div class="stat-value" style="color:var(--success)">${doneCount}</div></div>
+                <div class="stat-card"><div class="stat-label">平均得分</div><div class="stat-value" style="color:var(--text-primary)">${avgScore}</div></div>
+                <div class="stat-card"><div class="stat-label">完成率</div><div class="stat-value" style="color:${doneCount/total >= 0.8 ? 'var(--success)' : 'var(--warning)'}">${total > 0 ? Math.round(doneCount/total*100) : 0}%</div></div>`;
+
+            // Dept completion chart
+            const stat = statData.data || {};
+            const depts = Object.keys(stat);
+            if (depts.length > 0) {
+                const maxVal = Math.max(...depts.map(d => stat[d].completion_rate || 0), 1);
+                document.getElementById('completionChart').innerHTML = depts.map(d => {
+                    const r = stat[d];
+                    const rate = r.completion_rate || 0;
+                    return `<div style="display:flex;align-items:center;gap:12px;width:100%;padding:8px 16px;">
+                        <div style="min-width:80px;font-weight:600;font-size:14px">${d}</div>
+                        <div class="score-bar" style="flex:1">
+                            <div class="bar"><div class="fill" style="width:${(rate/maxVal)*100}%"></div></div>
+                            <div class="val">${rate}%</div>
+                        </div>
+                        <div style="font-size:12px;color:var(--text-secondary);min-width:60px">${r.completed || 0}/${r.total || 0}人</div>
+                    </div>`;
+                }).join('');
+            } else {
+                document.getElementById('completionChart').innerHTML = '<div><div style="font-size:32px;opacity:0.3;">📊</div><div>暂无部门数据</div></div>';
+            }
+
+            // Ranking
+            const sorted = [...completed].sort((a, b) => (b.final_score || 0) - (a.final_score || 0));
+            if (sorted.length === 0) {
+                document.getElementById('rankingTable').innerHTML = '<div style="text-align:center;padding:48px;color:var(--text-secondary)">暂无完成考核的数据</div>';
+            } else {
+                document.getElementById('rankingTable').innerHTML = `
+                    <table>
+                        <thead><tr><th>排名</th><th>姓名</th><th>部门</th><th>职位</th><th>考核周期</th><th>最终得分</th><th>得分分布</th></tr></thead>
+                        <tbody>${sorted.map((a, i) => {
+                            const score = a.final_score || 0;
+                            const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+                            const scoreColor = score >= 90 ? 'var(--success)' : score >= 70 ? 'var(--brand)' : score >= 60 ? 'var(--warning)' : 'var(--error)';
+                            return `<tr>
+                                <td><span class="rank ${rankClass}">${i + 1}</span></td>
+                                <td><strong>${a.employee?.name || '-'}</strong></td>
+                                <td>${a.employee?.department?.name || '-'}</td>
+                                <td>${a.employee?.position || '-'}</td>
+                                <td>${a.cycle?.name || '-'}</td>
+                                <td><strong style="color:${scoreColor}">${score}</strong></td>
+                                <td>
+                                    <div class="score-bar">
+                                        <div class="bar" style="max-width:120px"><div class="fill" style="width:${score}%"></div></div>
+                                    </div>
+                                </td>
+                            </tr>`;
+                        }).join('')}</tbody>
+                    </table>`;
+            }
+        } catch (e) {
+            toast('加载失败: ' + e.message, 'error');
+        }
+    }
+
+    function exportData() {
+        const cycleId = document.getElementById('filterCycle').value;
+        toast('导出功能开发中', 'success');
+    }
+
+    initNav();
+    init();
+    </script>
+</body>
+</html>
