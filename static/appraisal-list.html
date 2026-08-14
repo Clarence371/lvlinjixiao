@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>考核管理 - 绿林工具绩效管理系统</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--brand:#0078D4;--brand-hover:#106EBE;--text-primary:#323130;--text-secondary:#605E5C;--bg-primary:#FFFFFF;--bg-secondary:#F3F2F1;--bg-tertiary:#FAFAFA;--border:#EDEBE9;--border-strong:#D2D0CE;--success:#107C10;--warning:#FF8C00;--error:#D13438;--shadow-sm:0 2px 4px rgba(0,0,0,0.08);--shadow-md:0 4px 12px rgba(0,0,0,0.1);}
+        body{font-family:"Segoe UI Variable","Segoe UI","Microsoft YaHei",sans-serif;font-size:16px;line-height:1.6;color:var(--text-primary);background:var(--bg-secondary);}
+        .page-wrapper{margin-top:60px;padding:32px;}
+        .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+        .page-title{font-size:28px;font-weight:600;}
+        .card{background:white;border-radius:8px;box-shadow:var(--shadow-sm);padding:24px;margin-bottom:16px;}
+        .btn{padding:8px 20px;border-radius:4px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;font-family:inherit;display:inline-flex;align-items:center;gap:6px;}
+        .btn:active{transform:scale(0.98)}
+        .btn-primary{background:var(--brand);color:white}.btn-primary:hover{background:var(--brand-hover)}
+        .btn-secondary{background:white;color:var(--text-primary);border:1px solid var(--border-strong)}.btn-secondary:hover{background:var(--bg-secondary)}
+        .btn-sm{padding:5px 12px;font-size:13px;border-radius:4px;border:none;cursor:pointer;font-weight:600}
+        .btn-view{background:#DEECF9;color:var(--brand)}.btn-view:hover{background:#C4DEF6}
+        .btn-review{background:#FFF4CE;color:#797643}.btn-review:hover{background:#F0E6B8}
+        .filter-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;}
+        .filter-group{display:flex;flex-direction:column;gap:4px;}
+        .filter-label{font-size:12px;font-weight:600;color:var(--text-secondary);}
+        .filter-input,.filter-select{padding:7px 12px;border:1px solid var(--border-strong);border-radius:4px;font-size:14px;font-family:inherit}
+        .filter-input:focus,.filter-select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,120,212,0.15)}
+        table{width:100%;border-collapse:collapse;font-size:14px;}
+        table th{background:var(--bg-tertiary);padding:12px 16px;text-align:left;font-weight:600;border-bottom:1px solid var(--border)}
+        table td{padding:12px 16px;border-bottom:1px solid var(--border)}
+        table tr:hover td{background:#F5F9FD}
+        .badge{padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;display:inline-block}
+        .badge-pending{background:#F3F2F1;color:#605E5C}
+        .badge-self_review{background:#FFF4CE;color:#797643}
+        .badge-manager_review{background:#DEECF9;color:#0078D4}
+        .badge-completed{background:#DFF6DD;color:#107C10}
+        .score{font-size:18px;font-weight:700;color:var(--brand)}
+        .score.high{color:var(--success)}
+        .score.low{color:var(--error)}
+        .score.none{color:var(--text-secondary);font-size:14px;font-weight:400}
+        .pagination{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:16px;font-size:14px}
+        .pagination button{padding:6px 12px;border:1px solid var(--border);background:white;border-radius:4px;cursor:pointer;font-size:14px}
+        .pagination button:hover{background:var(--bg-secondary)}
+        .pagination button.active{background:var(--brand);color:white;border-color:var(--brand)}
+        .toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:500;z-index:9999;box-shadow:var(--shadow-md);animation:slideIn 0.3s ease}
+        .toast-success{background:#DFF6DD;color:#0B5C0B}
+        .toast-error{background:#FDE7E9;color:#A80000}
+        @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+        .top-nav{height:60px;background:#fff;border-bottom:1px solid #EDEBE9;display:flex;align-items:center;padding:0 32px;position:fixed;top:0;left:0;right:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+        .logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;color:var(--brand);text-decoration:none}
+        .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,#107C10,#389146);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:18px}
+        .nav-menu{display:flex;align-items:center;gap:4px;margin-left:48px;list-style:none}
+        .nav-menu li a{padding:6px 14px;border-radius:4px;font-size:14px;color:var(--text-secondary);text-decoration:none;transition:all 0.2s;cursor:pointer;display:block}
+        .nav-menu li a:hover{background:var(--bg-secondary)}
+        .nav-right{margin-left:auto}
+        .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--brand);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;cursor:pointer}
+        .empty-state{text-align:center;padding:48px;color:var(--text-secondary)}
+        .empty-icon{font-size:48px;opacity:0.3;margin-bottom:12px}
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard.html" class="logo"><div class="logo-icon">🌲</div><span>绿林工具绩效管理系统</span></a>
+        <ul class="nav-menu" id="navMenu"></ul>
+        <div class="nav-right" id="navRight"></div>
+    </nav>
+
+    <div class="page-wrapper">
+        <div class="page-header">
+            <h1 class="page-title" id="pageTitle">考核管理</h1>
+            <button class="btn btn-primary" onclick="openBatchCreate()" id="batchBtn">+ 批量创建考核</button>
+        </div>
+
+        <div class="card">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label">考核周期</label>
+                    <select class="filter-select" id="filterCycle" onchange="loadData(1)"></select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">状态</label>
+                    <select class="filter-select" id="filterStatus" onchange="loadData(1)">
+                        <option value="">全部</option>
+                        <option value="pending">待自评</option>
+                        <option value="self_review">待上级评分</option>
+                        <option value="completed">已完成</option>
+                    </select>
+                </div>
+                <button class="btn btn-secondary" onclick="resetFilters()">重置</button>
+            </div>
+            <div id="tableContainer"></div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <!-- 批量创建模态框 -->
+    <div id="batchModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:1000;" class="modal-overlay">
+        <div style="background:white;border-radius:8px;box-shadow:var(--shadow-md);width:500px;padding:24px;">
+            <h2 style="font-size:18px;font-weight:600;margin-bottom:16px;">批量创建考核单</h2>
+            <div class="form-group" style="margin-bottom:16px">
+                <label class="filter-label">考核周期</label>
+                <select class="filter-select" id="bCycle"></select>
+            </div>
+            <div class="form-group" style="margin-bottom:16px">
+                <label class="filter-label">选择员工（按住Ctrl可多选）</label>
+                <select class="filter-select" id="bEmployees" multiple size="8" style="height:200px;"></select>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;">
+                <button class="btn btn-secondary" onclick="closeBatchModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitBatchCreate()">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const API = '/api';
+    let currentPage = 1;
+    let cycles = [], employees = [];
+    let myRole = '';
+    let myEmpId = null;
+
+    function getToken() { return localStorage.getItem('pbc_token') || ''; }
+    function getUser() { const u = localStorage.getItem('pbc_user'); return u ? JSON.parse(u) : null; }
+
+    async function api(url, opts = {}) {
+        const headers = { 'Content-Type': 'application/json' };
+        const token = getToken();
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        const res = await fetch(API + url, { ...opts, headers: { ...headers, ...opts.headers } });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            if (res.status === 401) location.href = '/login.html';
+            throw new Error(data.message || '失败');
+        }
+        return data;
+    }
+
+    function toast(msg, type = 'info') {
+        const t = document.createElement('div');
+        t.className = 'toast toast-' + type;
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    function logout() { localStorage.removeItem('pbc_token'); localStorage.removeItem('pbc_user'); location.href = '/login.html'; }
+
+    function initNav() {
+        const user = getUser();
+        if (!user) { location.href = '/login.html'; return; }
+        myRole = user.role;
+        myEmpId = user.employee ? user.employee.id : null;
+        const menus = {
+            admin: [{label:'工作台',url:'/dashboard.html'},{label:'员工管理',url:'/employees.html'},{label:'业务指标',url:'/metrics.html'},{label:'数据录入',url:'/data-entry.html'},{label:'考核模板',url:'/appraisal-template.html'},{label:'考核周期',url:'/appraisal-cycle.html'},{label:'考核管理',url:'/appraisal-list.html'},{label:'报表中心',url:'/reports.html'}],
+            manager: [{label:'工作台',url:'/dashboard.html'},{label:'员工管理',url:'/employees.html'},{label:'数据录入',url:'/data-entry.html'},{label:'考核管理',url:'/appraisal-list.html'}],
+            employee: [{label:'工作台',url:'/dashboard.html'},{label:'我的考核',url:'/appraisal-list.html'}]
+        };
+        document.getElementById('navMenu').innerHTML = (menus[user.role]||[]).map(m => `<li><a href="${m.url}">${m.label}</a></li>`).join('');
+        document.getElementById('navRight').innerHTML = `<div class="user-avatar" onclick="logout()">${(user.username||'U')[0].toUpperCase()}</div>`;
+        
+        // Role-specific UI
+        if (user.role === 'admin') {
+            document.getElementById('pageTitle').textContent = '考核管理';
+            document.getElementById('batchBtn').style.display = '';
+        } else if (user.role === 'manager') {
+            document.getElementById('pageTitle').textContent = '团队考核';
+            document.getElementById('batchBtn').style.display = 'none';
+        } else {
+            document.getElementById('pageTitle').textContent = '我的考核';
+            document.getElementById('batchBtn').style.display = 'none';
+        }
+    }
+
+    async function init() {
+        await loadCycles();
+        await loadEmployees();
+        loadData(1);
+    }
+
+    async function loadCycles() {
+        try {
+            const data = await api('/appraisal/cycles');
+            cycles = data.data || [];
+            const opts = cycles.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            document.getElementById('filterCycle').innerHTML = '<option value="">全部周期</option>' + opts;
+            document.getElementById('bCycle').innerHTML = opts;
+        } catch(e) {}
+    }
+
+    async function loadEmployees() {
+        try {
+            const data = await api('/employee/list?page_size=100&status=active');
+            employees = data.data.items || [];
+            const opts = employees.map(e => `<option value="${e.id}">${e.name} (${e.employee_no||''})</option>`).join('');
+            document.getElementById('bEmployees').innerHTML = opts;
+        } catch(e) {}
+    }
+
+    async function loadData(page = 1) {
+        currentPage = page;
+        try {
+            const params = new URLSearchParams({ page, page_size: 20 });
+            const cycleId = document.getElementById('filterCycle').value;
+            const status = document.getElementById('filterStatus').value;
+            if (cycleId) params.append('cycle_id', cycleId);
+            if (status) params.append('status', status);
+            const data = await api('/appraisal/list?' + params.toString());
+            renderData(data.data || {});
+        } catch (e) { toast('加载失败: ' + e.message, 'error'); }
+    }
+
+    function statusLabel(s) {
+        return {pending:'待自评',self_review:'待上级评分',manager_review:'待确认',completed:'已完成'}[s] || s;
+    }
+
+    function scoreClass(s, score) {
+        if (!score && score !== 0) return 'none';
+        return score >= 80 ? 'high' : score < 60 ? 'low' : '';
+    }
+
+    function renderData(result) {
+        const items = result.items || [];
+        if (!items.length) {
+            document.getElementById('tableContainer').innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>暂无考核记录</p></div>';
+            document.getElementById('pagination').innerHTML = '';
+            return;
+        }
+        document.getElementById('tableContainer').innerHTML = `
+            <table>
+                <thead><tr>
+                    <th>员工</th><th>部门/职位</th><th>考核周期</th><th>自评状态</th><th>上级评分</th><th>最终得分</th><th>状态</th><th>操作</th>
+                </tr></thead>
+                <tbody>${items.map(a => {
+                    const emp = a.employee || {};
+                    const cycle = a.cycle || {};
+                    const statusBadge = {pending:'badge-pending',self_review:'badge-self_review',manager_review:'badge-manager_review',completed:'badge-completed'}[a.final_status] || 'badge-pending';
+                    return `<tr>
+                        <td><strong>${emp.name || '-'}</strong><br><code style="font-size:11px;color:var(--text-secondary)">${emp.employee_no || ''}</code></td>
+                        <td>${emp.department ? emp.department.name : ''} / ${emp.position || ''}</td>
+                        <td>${cycle.name || '-'}</td>
+                        <td><span class="badge ${a.self_assessment_status === 'submitted' ? 'badge-completed' : 'badge-pending'}">${a.self_assessment_status === 'submitted' ? '已提交' : '未提交'}</span></td>
+                        <td class="score ${scoreClass(a.final_status, a.manager_score)}">${a.manager_score != null ? a.manager_score : '-'}</td>
+                        <td class="score ${scoreClass(a.final_status, a.final_score)}">${a.final_score != null ? a.final_score : '-'}</td>
+                        <td><span class="badge ${statusBadge}">${statusLabel(a.final_status)}</span></td>
+                        <td>
+                            <button class="btn-sm btn-view" onclick="viewAppraisal(${a.id})">查看</button>
+                            ${(a.final_status === 'self_review' && myRole === 'manager') || (a.final_status === 'pending' && myRole === 'employee' && a.employee_id === myEmpId) 
+                              ? `<button class="btn-sm btn-review" onclick="viewAppraisal(${a.id})">${myRole === 'employee' ? '自评' : '评分'}</button>` : ''}
+                        </td>
+                    </tr>`;
+                }).join('')}</tbody>
+            </table>`;
+        renderPagination(result);
+    }
+
+    function renderPagination(pg) {
+        if (!pg || pg.pages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+        let btns = `<button ${pg.page <= 1 ? 'disabled' : ''} onclick="loadData(${pg.page-1})">上一页</button>`;
+        for (let i = 1; i <= pg.pages; i++) {
+            if (i === 1 || i === pg.pages || Math.abs(i - pg.page) <= 2)
+                btns += `<button class="${i === pg.page ? 'active' : ''}" onclick="loadData(${i})">${i}</button>`;
+        }
+        btns += `<button ${pg.page >= pg.pages ? 'disabled' : ''} onclick="loadData(${pg.page+1})">下一页</button>`;
+        document.getElementById('pagination').innerHTML = `<span style="margin-right:auto;font-size:13px;color:var(--text-secondary)">共 ${pg.total} 条</span>` + btns;
+    }
+
+    function viewAppraisal(id) {
+        location.href = '/appraisal-form.html?id=' + id;
+    }
+
+    function openBatchCreate() {
+        document.getElementById('batchModal').style.display = 'flex';
+    }
+
+    function closeBatchModal() {
+        document.getElementById('batchModal').style.display = 'none';
+    }
+
+    async function submitBatchCreate() {
+        const cycleId = document.getElementById('bCycle').value;
+        const selected = Array.from(document.getElementById('bEmployees').selectedOptions).map(o => parseInt(o.value));
+        if (!cycleId) { toast('请选择考核周期', 'error'); return; }
+        if (!selected.length) { toast('请选择员工', 'error'); return; }
+        try {
+            await api('/appraisal/batch-create', {method:'POST', body:JSON.stringify({cycle_id: parseInt(cycleId), employee_ids: selected})});
+            toast('批量创建成功', 'success');
+            closeBatchModal();
+            loadData(1);
+        } catch (e) { toast(e.message, 'error'); }
+    }
+
+    function resetFilters() {
+        document.getElementById('filterCycle').value = '';
+        document.getElementById('filterStatus').value = '';
+        loadData(1);
+    }
+
+    initNav();
+    init();
+    </script>
+</body>
+</html>
