@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>考核详情 - 绿林工具绩效管理系统</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--brand:#0078D4;--brand-hover:#106EBE;--text-primary:#323130;--text-secondary:#605E5C;--bg-primary:#FFFFFF;--bg-secondary:#F3F2F1;--bg-tertiary:#FAFAFA;--border:#EDEBE9;--border-strong:#D2D0CE;--success:#107C10;--warning:#FF8C00;--error:#D13438;--shadow-sm:0 2px 4px rgba(0,0,0,0.08);--shadow-md:0 4px 12px rgba(0,0,0,0.1);}
+        body{font-family:"Segoe UI Variable","Segoe UI","Microsoft YaHei",sans-serif;font-size:16px;line-height:1.6;color:var(--text-primary);background:var(--bg-secondary);}
+        .page-wrapper{margin-top:60px;padding:32px;max-width:960px;margin-left:auto;margin-right:auto;}
+        .card{background:white;border-radius:8px;box-shadow:var(--shadow-sm);padding:24px;margin-bottom:16px;}
+        .card-title{font-size:18px;font-weight:600;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+        .btn{padding:8px 20px;border-radius:4px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;font-family:inherit}
+        .btn-primary{background:var(--brand);color:white}.btn-primary:hover{background:var(--brand-hover)}
+        .btn-secondary{background:white;color:var(--text-primary);border:1px solid var(--border-strong)}.btn-secondary:hover{background:var(--bg-secondary)}
+        .btn-success{background:var(--success);color:white}
+        .btn:disabled{opacity:0.5;cursor:not-allowed}
+        .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px}
+        .info-item{background:var(--bg-tertiary);padding:10px 14px;border-radius:6px}
+        .info-label{font-size:12px;color:var(--text-secondary);margin-bottom:4px}
+        .info-value{font-size:15px;font-weight:600}
+        .step-bar{display:flex;align-items:center;margin-bottom:24px;gap:0}
+        .step-item{flex:1;text-align:center;position:relative}
+        .step-item .step-circle{width:32px;height:32px;border-radius:50%;background:var(--bg-secondary);border:2px solid var(--border-strong);display:inline-flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:6px;color:var(--text-secondary)}
+        .step-item .step-label{font-size:12px;color:var(--text-secondary)}
+        .step-item.active .step-circle{background:var(--brand);border-color:var(--brand);color:white}
+        .step-item.active .step-label{color:var(--brand);font-weight:600}
+        .step-item.done .step-circle{background:var(--success);border-color:var(--success);color:white}
+        .step-connector{flex:0 0 40px;height:2px;background:var(--border-strong);margin-bottom:20px}
+        .step-connector.done{background:var(--success)}
+        .metric-list{display:flex;flex-direction:column;gap:12px}
+        .metric-item{border:1px solid var(--border);border-radius:8px;padding:16px}
+        .metric-item-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+        .metric-item-name{font-size:15px;font-weight:600}
+        .metric-item-meta{font-size:12px;color:var(--text-secondary);margin-bottom:12px}
+        .metric-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .form-group{margin-bottom:12px}
+        .form-label{display:block;font-size:13px;font-weight:600;margin-bottom:4px;color:var(--text-secondary)}
+        .form-input,.form-select,.form-textarea{width:100%;padding:8px 12px;border:1px solid var(--border-strong);border-radius:4px;font-size:14px;font-family:inherit}
+        .form-input:focus,.form-textarea:focus{border-color:var(--brand);outline:none;box-shadow:0 0 0 3px rgba(0,120,212,0.15)}
+        .form-textarea{resize:vertical;min-height:60px}
+        .self-score-box,.manager-score-box{background:var(--bg-tertiary);border-radius:8px;padding:16px;margin-bottom:16px}
+        .self-score-box h4,.manager-score-box h4{margin-bottom:12px;font-size:15px}
+        .score-result{font-size:32px;font-weight:700;color:var(--brand);text-align:center;padding:20px;background:white;border-radius:8px;border:2px dashed var(--border)}
+        .score-result.high{color:var(--success)}
+        .score-result.low{color:var(--error)}
+        .toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:500;z-index:9999;box-shadow:var(--shadow-md);animation:slideIn 0.3s ease}
+        .toast-success{background:#DFF6DD;color:#0B5C0B}
+        .toast-error{background:#FDE7E9;color:#A80000}
+        @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+        .top-nav{height:60px;background:#fff;border-bottom:1px solid #EDEBE9;display:flex;align-items:center;padding:0 32px;position:fixed;top:0;left:0;right:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+        .logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;color:var(--brand);text-decoration:none}
+        .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,#107C10,#389146);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:18px}
+        .nav-menu{display:flex;align-items:center;gap:4px;margin-left:48px;list-style:none}
+        .nav-menu li a{padding:6px 14px;border-radius:4px;font-size:14px;color:var(--text-secondary);text-decoration:none;transition:all 0.2s;cursor:pointer;display:block}
+        .nav-menu li a:hover{background:var(--bg-secondary)}
+        .nav-right{margin-left:auto}
+        .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--brand);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;cursor:pointer}
+        .loading{text-align:center;padding:60px;color:var(--text-secondary);font-size:16px}
+        .loading::after{content:'...';animation:dots 1.5s infinite}
+        @keyframes dots{0%{content:'.'}33%{content:'..'}66%{content:'...'}}
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="/dashboard.html" class="logo"><div class="logo-icon">🌲</div><span>绿林工具绩效管理系统</span></a>
+        <ul class="nav-menu" id="navMenu"></ul>
+        <div class="nav-right" id="navRight"></div>
+    </nav>
+
+    <div class="page-wrapper">
+        <div style="margin-bottom:16px;">
+            <a href="/appraisal-list.html" style="color:var(--brand);text-decoration:none;font-size:14px;">&larr; 返回考核列表</a>
+        </div>
+
+        <div id="appContent">
+            <div class="loading">加载中</div>
+        </div>
+    </div>
+
+    <script>
+    const API = '/api';
+    let appraisal = null;
+    let metrics = [];
+    let myRole = '';
+    let myEmpId = null;
+
+    function getToken() { return localStorage.getItem('pbc_token') || ''; }
+    function getUser() { const u = localStorage.getItem('pbc_user'); return u ? JSON.parse(u) : null; }
+
+    async function api(url, opts = {}) {
+        const headers = { 'Content-Type': 'application/json' };
+        const token = getToken();
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        const res = await fetch(API + url, { ...opts, headers: { ...headers, ...opts.headers } });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            if (res.status === 401) location.href = '/login.html';
+            throw new Error(data.message || '失败');
+        }
+        return data;
+    }
+
+    function toast(msg, type = 'info') {
+        const t = document.createElement('div');
+        t.className = 'toast toast-' + type;
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    function logout() { localStorage.removeItem('pbc_token'); localStorage.removeItem('pbc_user'); location.href = '/login.html'; }
+
+    function initNav() {
+        const user = getUser();
+        if (!user) { location.href = '/login.html'; return; }
+        myRole = user.role;
+        myEmpId = user.employee ? user.employee.id : null;
+        const menus = {
+            admin: [{label:'工作台',url:'/dashboard.html'},{label:'员工管理',url:'/employees.html'},{label:'业务指标',url:'/metrics.html'},{label:'数据录入',url:'/data-entry.html'},{label:'考核模板',url:'/appraisal-template.html'},{label:'考核周期',url:'/appraisal-cycle.html'},{label:'考核管理',url:'/appraisal-list.html'},{label:'报表中心',url:'/reports.html'}],
+            manager: [{label:'工作台',url:'/dashboard.html'},{label:'员工管理',url:'/employees.html'},{label:'数据录入',url:'/data-entry.html'},{label:'考核管理',url:'/appraisal-list.html'}],
+            employee: [{label:'工作台',url:'/dashboard.html'},{label:'我的考核',url:'/appraisal-list.html'}]
+        };
+        document.getElementById('navMenu').innerHTML = (menus[user.role]||[]).map(m => `<li><a href="${m.url}">${m.label}</a></li>`).join('');
+        document.getElementById('navRight').innerHTML = `<div class="user-avatar" onclick="logout()">${(user.username||'U')[0].toUpperCase()}</div>`;
+    }
+
+    async function loadAppraisal() {
+        const params = new URLSearchParams(location.search);
+        const id = params.get('id');
+        if (!id) { toast('缺少考核ID', 'error'); return; }
+
+        try {
+            const [appData, metricsData] = await Promise.all([
+                api('/appraisal/' + id),
+                api('/metric/metrics'),
+            ]);
+            appraisal = appData.data;
+            metrics = metricsData.data || [];
+            renderAppraisal();
+        } catch (e) {
+            document.getElementById('appContent').innerHTML = `<div style="color:var(--error);padding:48px;text-align:center;">加载失败: ${e.message}</div>`;
+        }
+    }
+
+    function getStep() {
+        const s = appraisal.final_status;
+        if (s === 'completed') return 3;
+        if (s === 'manager_review' || s === 'self_review') return 2;
+        return 1;
+    }
+
+    function renderAppraisal() {
+        const emp = appraisal.employee || {};
+        const cycle = appraisal.cycle || {};
+        const statusText = {pending:'待自评',self_review:'待上级评分',completed:'已完成'}[appraisal.final_status] || appraisal.final_status;
+        const step = getStep();
+
+        let stepHTML = `
+        <div class="step-bar">
+            <div class="step-item ${step >= 1 ? (step > 1 ? 'done' : 'active') : ''}">
+                <div class="step-circle">1</div>
+                <div class="step-label">自评</div>
+            </div>
+            <div class="step-connector ${step > 1 ? 'done' : ''}"></div>
+            <div class="step-item ${step >= 2 ? (step > 2 ? 'done' : 'active') : ''}">
+                <div class="step-circle">2</div>
+                <div class="step-label">上级评分</div>
+            </div>
+            <div class="step-connector ${step > 2 ? 'done' : ''}"></div>
+            <div class="step-item ${step >= 3 ? 'done active' : ''}">
+                <div class="step-circle">3</div>
+                <div class="step-label">完成</div>
+            </div>
+        </div>`;
+
+        let mainContent = '';
+
+        // 自评区域
+        const canSelfAssess = myRole === 'employee' && appraisal.employee_id === myEmpId && appraisal.final_status === 'pending';
+        if (canSelfAssess) {
+            mainContent += renderSelfAssessForm();
+        } else if (appraisal.self_assessment) {
+            mainContent += renderSelfAssessmentResult();
+        }
+
+        // 上级评分区域
+        const canReview = myRole === 'manager' && appraisal.final_status === 'self_review';
+        if (canReview) {
+            mainContent += renderManagerReviewForm();
+        } else if (appraisal.manager_assessment) {
+            mainContent += renderManagerReviewResult();
+        }
+
+        // 最终得分
+        if (appraisal.final_score != null) {
+            mainContent += `
+            <div class="card">
+                <h3 class="card-title">最终考核结果</h3>
+                <div class="score-result ${appraisal.final_score >= 80 ? 'high' : appraisal.final_score < 60 ? 'low' : ''}">
+                    ${appraisal.final_score} 分
+                </div>
+                <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                    <div class="info-item">
+                        <div class="info-label">自评提交时间</div>
+                        <div class="info-value">${appraisal.self_submitted_at ? new Date(appraisal.self_submitted_at).toLocaleDateString('zh-CN') : '-'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">上级评分时间</div>
+                        <div class="info-value">${appraisal.manager_submitted_at ? new Date(appraisal.manager_submitted_at).toLocaleDateString('zh-CN') : '-'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">完成时间</div>
+                        <div class="info-value">${appraisal.completed_at ? new Date(appraisal.completed_at).toLocaleDateString('zh-CN') : '-'}</div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        document.getElementById('appContent').innerHTML = `
+            <div class="card">
+                <h3 class="card-title">考核信息</h3>
+                ${stepHTML}
+                <div class="info-grid">
+                    <div class="info-item"><div class="info-label">员工</div><div class="info-value">${emp.name || '-'}</div></div>
+                    <div class="info-item"><div class="info-label">工号</div><div class="info-value">${emp.employee_no || '-'}</div></div>
+                    <div class="info-item"><div class="info-label">职位</div><div class="info-value">${emp.position || '-'}</div></div>
+                    <div class="info-item"><div class="info-label">考核周期</div><div class="info-value">${cycle.name || '-'}</div></div>
+                    <div class="info-item"><div class="info-label">上级</div><div class="info-value">${appraisal.manager ? appraisal.manager.name : '-'}</div></div>
+                    <div class="info-item"><div class="info-label">当前状态</div><div class="info-value">${statusText}</div></div>
+                </div>
+            </div>
+            ${mainContent || '<div class="card"><p style="color:var(--text-secondary);text-align:center;padding:32px;">暂无需要处理的内容</p></div>'}`;
+    }
+
+    function renderSelfAssessForm() {
+        return `
+            <div class="card">
+                <h3 class="card-title">自我评估</h3>
+                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
+                    请对以下考核指标进行自评打分（1-100分），并填写具体说明。
+                </p>
+                <div class="metric-list">
+                    ${(appraisal.self_assessment || []).map((m, i) => `
+                        <div class="metric-item">
+                            <div class="metric-item-header">
+                                <span class="metric-item-name">${m.metric_name || '指标' + m.metric_id}</span>
+                                <span style="font-size:13px;color:var(--text-secondary)">权重: ${m.weight}%</span>
+                            </div>
+                            <div class="metric-form">
+                                <div>
+                                    <label class="form-label">自评得分 (1-100)</label>
+                                    <input type="number" class="form-input" id="self_score_${i}" min="1" max="100" placeholder="请输入1-100分">
+                                </div>
+                                <div>
+                                    <label class="form-label">目标达成率 (%)</label>
+                                    <input type="number" class="form-input" id="self_achieve_${i}" min="0" step="0.1" placeholder="如: 95">
+                                </div>
+                            </div>
+                            <div style="margin-top:8px">
+                                <label class="form-label">完成情况说明</label>
+                                <textarea class="form-textarea" id="self_note_${i}" placeholder="请描述本考核周期内的工作完成情况"></textarea>
+                            </div>
+                        </div>`).join('')}
+                </div>
+                <div style="margin-top:20px;text-align:right">
+                    <button class="btn btn-primary" onclick="submitSelfAssessment()">提交自评</button>
+                </div>
+            </div>`;
+    }
+
+    function renderSelfAssessmentResult() {
+        const sa = appraisal.self_assessment || [];
+        return `
+            <div class="self-score-box">
+                <h4>自评结果</h4>
+                <div class="metric-list">
+                    ${sa.map(m => `
+                        <div class="metric-item" style="background:white;">
+                            <div class="metric-item-header">
+                                <span class="metric-item-name">${m.metric_name || '指标' + m.metric_id}</span>
+                                <span style="font-size:13px">得分: <strong>${m.score || '-'}</strong> | 权重: ${m.weight}%</span>
+                            </div>
+                            ${m.achievement_rate ? `<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">达成率: ${m.achievement_rate}%</div>` : ''}
+                            ${m.note ? `<div style="font-size:13px;color:var(--text-secondary);padding:8px;background:var(--bg-tertiary);border-radius:4px">${m.note}</div>` : ''}
+                        </div>`).join('')}
+                </div>
+            </div>`;
+    }
+
+    function renderManagerReviewForm() {
+        return `
+            <div class="card">
+                <h3 class="card-title">上级评分</h3>
+                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
+                    请根据员工自评和实际表现，对各指标进行综合评分（1-100分）。
+                </p>
+                <div class="metric-list">
+                    ${(appraisal.self_assessment || []).map((m, i) => `
+                        <div class="metric-item">
+                            <div class="metric-item-header">
+                                <span class="metric-item-name">${m.metric_name || '指标' + m.metric_id}</span>
+                                <span style="font-size:13px;color:var(--text-secondary)">权重: ${m.weight}% | 自评: ${m.score || '-'}</span>
+                            </div>
+                            ${m.note ? `<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;padding:8px;background:var(--bg-tertiary);border-radius:4px">自评说明: ${m.note}</div>` : ''}
+                            <div>
+                                <label class="form-label">综合评分 (1-100)</label>
+                                <input type="number" class="form-input" id="mgr_score_${i}" min="1" max="100" placeholder="请输入1-100分" style="max-width:200px">
+                            </div>
+                        </div>`).join('')}
+                </div>
+                <div style="margin-top:20px;text-align:right">
+                    <button class="btn btn-success" onclick="submitManagerReview()">提交评分</button>
+                </div>
+            </div>`;
+    }
+
+    function renderManagerReviewResult() {
+        const ma = appraisal.manager_assessment || [];
+        return `
+            <div class="manager-score-box">
+                <h4>上级评分结果</h4>
+                ${appraisal.manager_score != null ? `<div class="score-result" style="font-size:24px;margin-bottom:16px">综合得分: <strong>${appraisal.manager_score}</strong> 分</div>` : ''}
+                <div class="metric-list">
+                    ${ma.map(m => `
+                        <div class="metric-item" style="background:white;">
+                            <div class="metric-item-header">
+                                <span class="metric-item-name">${m.metric_name || '指标' + m.metric_id}</span>
+                                <span>评分: <strong>${m.score}</strong> | 权重: ${m.weight}%</span>
+                            </div>
+                        </div>`).join('')}
+                </div>
+            </div>`;
+    }
+
+    async function submitSelfAssessment() {
+        const sa = appraisal.self_assessment || appraisal.template?.metrics || [];
+        const metricsData = [];
+        sa.forEach((m, i) => {
+            const score = parseFloat(document.getElementById('self_score_' + i).value);
+            const achieve = parseFloat(document.getElementById('self_achieve_' + i).value);
+            const note = document.getElementById('self_note_' + i).value;
+            if (score) {
+                metricsData.push({
+                    metric_id: m.metric_id,
+                    metric_name: m.metric_name || (metrics.find(mt => mt.id === m.metric_id)?.name || '指标'),
+                    weight: m.weight || 0,
+                    score: score,
+                    achievement_rate: achieve || null,
+                    note: note,
+                });
+            }
+        });
+        if (!metricsData.length) { toast('请至少填写一个指标得分', 'error'); return; }
+        try {
+            await api('/appraisal/' + appraisal.id + '/self-assessment', {
+                method:'POST',
+                body:JSON.stringify({metrics: metricsData})
+            });
+            toast('自评提交成功', 'success');
+            loadAppraisal();
+        } catch (e) { toast(e.message, 'error'); }
+    }
+
+    async function submitManagerReview() {
+        const ma = appraisal.self_assessment || [];
+        const metricsData = [];
+        ma.forEach((m, i) => {
+            const score = parseFloat(document.getElementById('mgr_score_' + i).value);
+            if (score) {
+                metricsData.push({
+                    metric_id: m.metric_id,
+                    metric_name: m.metric_name || '指标',
+                    weight: m.weight || 0,
+                    score: score,
+                });
+            }
+        });
+        if (!metricsData.length) { toast('请至少填写一个评分', 'error'); return; }
+        try {
+            await api('/appraisal/' + appraisal.id + '/manager-review', {
+                method:'POST',
+                body:JSON.stringify({metrics: metricsData})
+            });
+            toast('评分提交成功', 'success');
+            setTimeout(() => location.href = '/appraisal-list.html', 1500);
+        } catch (e) { toast(e.message, 'error'); }
+    }
+
+    // Load default self assessment structure
+    async function init() {
+        const params = new URLSearchParams(location.search);
+        const id = params.get('id');
+        if (!id) { document.getElementById('appContent').innerHTML = '<div style="color:var(--error);padding:48px">缺少考核ID</div>'; return; }
+
+        try {
+            const [appData, metricsData] = await Promise.all([
+                api('/appraisal/' + id),
+                api('/metric/metrics'),
+            ]);
+            appraisal = appData.data;
+            metrics = metricsData.data || [];
+
+            // Initialize self_assessment with template metrics if empty
+            if (!appraisal.self_assessment || appraisal.self_assessment.length === 0) {
+                try {
+                    const tplData = await api('/appraisal/templates/' + (appraisal.template_id || 1));
+                    const tplMetrics = tplData.data?.metrics_detail || [];
+                    appraisal.self_assessment = tplMetrics.map((m, i) => ({
+                        metric_id: m.metric?.id || m.metric_id,
+                        metric_name: m.metric?.name || '指标',
+                        weight: m.weight || 0,
+                        score: null,
+                        achievement_rate: null,
+                        note: '',
+                    }));
+                } catch(e) {
+                    appraisal.self_assessment = metrics.map(m => ({
+                        metric_id: m.id,
+                        metric_name: m.name,
+                        weight: m.weight,
+                        score: null,
+                        achievement_rate: null,
+                        note: '',
+                    }));
+                }
+            }
+            renderAppraisal();
+        } catch (e) {
+            document.getElementById('appContent').innerHTML = `<div style="color:var(--error);padding:48px;text-align:center;">加载失败: ${e.message}</div>`;
+        }
+    }
+
+    initNav();
+    init();
+    </script>
+</body>
+</html>
